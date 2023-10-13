@@ -3,7 +3,7 @@ import { ScannerOptions } from "../builders/scanner-options";
 import { Parser } from 'i18next-scanner';
 import fs from "fs/promises";
 import * as fsSync from 'fs';
-import path, { resolve } from 'path';
+import path from 'path';
 import { createSourceStringObj, defaultHandler } from "./handlers";
 
 export class TranslationScanner {
@@ -32,15 +32,12 @@ export class TranslationScanner {
             const content = fsSync.readFileSync(filePath, 'utf-8');
             const allPriorityKeys = Object.keys(this.constFileData);
             const allSourceStringsFound: unknown[] = [];
-            this.parser.parseFuncFromString(content.toString(), {dynamicSupportedOptions: true}, (key: string, opts: Record<string, any>) => {
+            this.parser.parseFuncFromString(content.toString(), (key: string, opts: Record<string, any>) => {
                 if(allPriorityKeys.includes(key)) {
-                    console.error(`Key: ${key} is already defined in constants file.`);
-                    return
-                    // reject(new Error(`Key: ${key} is already defined in constants file.`))
-                    // throw new Error(`Key: ${key} is already defined in constants file.`)
+                    throw new Error(`\nKey: '${key}' is already defined in '${this.constFilePath}'\nRemove '${key}' from '${filePath}'\n`)
                 }
-                const sourceString = createSourceStringObj(key, opts);
-                console.log("🚀 ~ file: parser.ts:43 ~ TranslationScanner ~ this.parser.parseFuncFromString ~ sourceString:", key, opts)
+                const argsToUse = allPriorityKeys.includes(key) ? this.constFileData[key] : opts;
+                const sourceString = createSourceStringObj(key, argsToUse);
                 allSourceStringsFound.push(sourceString)
                 this.parser.set(key, sourceString.defaultValue);
             });
@@ -70,11 +67,20 @@ export class TranslationScanner {
             const files = await this.getAllFilePaths(baseDir);
             
             const allScanPromises: any[] = [];
+
+            // Extract all method source strings
             files.forEach(path => {
                  allScanPromises.push(this.parseContentAsync(path));
             });
             let sourceStrings = await Promise.all(allScanPromises);
             sourceStrings = sourceStrings.filter(arr => arr.length);
+
+            // Extract all source strings from constant file
+            Object.keys(this.constFileData).forEach(key => {
+                const sourceString = createSourceStringObj(key, this.constFileData[key]);
+                this.parser.set(key, sourceString.defaultValue);
+                sourceStrings.push(sourceString);
+            })
             console.log("Resource Store ", this.parser.get())
             return sourceStrings.flat();
 

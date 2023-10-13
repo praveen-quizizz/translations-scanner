@@ -35,8 +35,8 @@ export type ScannerOptions = {
         jsonIndent: number;
         lineEnding: string;
     };
-    keySeparator: string;
-    nsSeparator: string;
+    keySeparator: string | boolean;
+    nsSeparator: string | boolean;
     context: boolean;
     contextFallback: boolean;
     contextSeparator: string;
@@ -201,12 +201,12 @@ export class ScannerOptionsBuilder {
         return this;
     }
 
-    setKeySeparator(keySeparator: string): this {
+    setKeySeparator(keySeparator: string | boolean): this {
         this.options.keySeparator = keySeparator;
         return this;
     }
 
-    setNsSeparator(nsSeparator: string): this {
+    setNsSeparator(nsSeparator: string | boolean): this {
         this.options.nsSeparator = nsSeparator;
         return this;
     }

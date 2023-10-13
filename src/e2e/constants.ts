@@ -4,5 +4,11 @@ export default {
     },
     'key-2': {
         defaultValue: 'Content 2'
-    }
+    },
+    'key-3': {
+        defaultValue: 'Content 888',
+        metadata: {
+            forceCreate: true
+        }
+    },
 }

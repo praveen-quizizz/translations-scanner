@@ -13,8 +13,8 @@ async function main() {
             suffix: '}',
         })
         .setDefaultValue('__NO_TRANSLATION__')
-        .setKeySeparator('::Q::')
-        .setNsSeparator(":QQ:")
+        .setKeySeparator(false)
+        .setNsSeparator(false)
         .build();
 
     const parserOptions = new ParserOptionsBuilder()
@@ -31,4 +31,4 @@ async function main() {
     // console.log("data" ,data)
 }
 
-main().then(console.log)
+main().then()

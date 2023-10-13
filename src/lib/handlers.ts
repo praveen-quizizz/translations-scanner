@@ -1,14 +1,17 @@
 import { CustomHandlerFn } from "../builders/parser-options"
 
 export function createSourceStringObj(key: string, obj: Record<string, any>) {
+    console.log("🚀 ~ file: handlers.ts:4 ~ createSourceStringObj ~ key:", key)
     let ss = {
         defaultValue: key,
-         context: {
-            description: '',
-            url: `${key}_url`,
-            screenshotUrl: `${key}_screenshotUrl`,
-            lexicalCategory: `${key}_lexicalCategory`,
-        }
+        context: {
+            description: null,
+            screenshotUrl: null,
+            lexicalCategory: null,
+        },
+        metadata: {
+            forceCreate: false
+        },
     };
 
     if(!obj) {
@@ -17,20 +20,21 @@ export function createSourceStringObj(key: string, obj: Record<string, any>) {
 
     if(obj.defaultValue) {
         ss.defaultValue = obj.defaultValue;
-    } else {
-        ss.defaultValue = "__NO_TRANSLATION__";
     }
-
-    if(typeof obj.context !== 'object') {
-        return ss;
-    }
-
-    if (obj.context) {
+    
+    if(typeof obj.context === 'object') {
         ss.context = {
             ...ss.context,
-            ...obj.context
+            ...obj.context,
         }
-    } 
+    }
+
+    if(typeof obj.metadata === 'object') {
+        ss.metadata = {
+            ...ss.metadata,
+            ...obj.metadata,
+        }
+    }
 
     return ss;
 }
