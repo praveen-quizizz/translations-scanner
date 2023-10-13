@@ -1,6 +1,6 @@
 import { ScannerOptions } from "./scanner-options";
 
-export type CustomHandlerFn = (key: string, opts: any) => void;
+export type CustomHandlerFn = (parser: any, key: string, opts: any) => void;
 
 export class ParserOptionsBuilder {
     private scannerOptions: Partial<ScannerOptions> | undefined;
