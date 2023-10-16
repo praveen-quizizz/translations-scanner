@@ -1,4 +1,3 @@
-import { ParserOptionsBuilder } from "../builders/parser-options";
 import { ScannerOptionsBuilder } from "../builders/scanner-options";
 import path from 'path';
 import { TranslationScanner } from "../lib/parser";
@@ -17,18 +16,13 @@ async function main() {
         .setNsSeparator(false)
         .build();
 
-    const parserOptions = new ParserOptionsBuilder()
-        .setOptions(scannerOptions)
-        .setConstantsFilePath(path.resolve('./dist/e2e/constants.js'))
-        .build();
-
     const tScanner = new TranslationScanner({
         options: scannerOptions,
-        constantsFile: parserOptions.constantsFile ?? ''
+        constantsFile:path.resolve('./dist/e2e/constants.js'),
     });
     await tScanner.init()
-    const data = await tScanner.scan('/Users/praveen/github/frontend/apps/admin/src');
-    // console.log("data" ,data)
+    await tScanner.scan('/Users/praveen/github/frontend/apps/admin/src');
+    console.log(tScanner.getResourceStore());
 }
 
-main().then()
+main().then();

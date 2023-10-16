@@ -4,13 +4,15 @@ import { Parser } from 'i18next-scanner';
 import fs from "fs/promises";
 import * as fsSync from 'fs';
 import path from 'path';
-import { createSourceStringObj, defaultHandler } from "./handlers";
+import { ISourceString, createSourceStringObj, defaultHandler } from "./handlers";
+import { createTempDir, tempDirPath, writeJSON } from "./utils";
 
 export class TranslationScanner {
     private parser: any;
     private constFileData: any;
     private constFilePath: string;
     private customHandler: CustomHandlerFn | undefined;
+    private keyCountMap: Record<string, number> = {};
 
     constructor(args: {
         options: Partial<ScannerOptions>,
@@ -25,6 +27,7 @@ export class TranslationScanner {
     async init() {
         const module = await import(this.constFilePath);
         this.constFileData = module.default
+        createTempDir();
     }
 
     parseContentAsync(filePath: string) {
@@ -33,16 +36,24 @@ export class TranslationScanner {
             const allPriorityKeys = Object.keys(this.constFileData);
             const allSourceStringsFound: unknown[] = [];
             this.parser.parseFuncFromString(content.toString(), (key: string, opts: Record<string, any>) => {
-                if(allPriorityKeys.includes(key)) {
-                    throw new Error(`\nKey: '${key}' is already defined in '${this.constFilePath}'\nRemove '${key}' from '${filePath}'\n`)
+                if (allPriorityKeys.includes(key)) {
+                    const e = Error(`\nKey: '${key}' is already defined in '${this.constFilePath}'\nRemove '${key}' from '${filePath}'\n`);
+                    console.log(e.message);
+                    return;
+                }
+                this.keyCountMap[key] = this.keyCountMap[key] ? this.keyCountMap[key] + 1 : 1;
+                if(this.keyCountMap[key] > 1) {
+                    console.log(`Ignoring adding key - '${key}' to resource store '${key}' is already registered`);
+                    return;
                 }
                 const argsToUse = allPriorityKeys.includes(key) ? this.constFileData[key] : opts;
                 const sourceString = createSourceStringObj(key, argsToUse);
                 allSourceStringsFound.push(sourceString)
                 this.parser.set(key, sourceString.defaultValue);
             });
+            
             resolve(allSourceStringsFound);
-        }); 
+        });
     }
 
     private async getAllFilePaths(directoryPath: string) {
@@ -62,30 +73,52 @@ export class TranslationScanner {
         return list;
     }
 
+    async extractMethodsStrings(baseDir: string) {
+        const files = await this.getAllFilePaths(baseDir);
+
+        const allScanPromises: any[] = [];
+
+        files.forEach(path => {
+            allScanPromises.push(this.parseContentAsync(path));
+        });
+        let sourceStrings = await Promise.all(allScanPromises);
+        sourceStrings = sourceStrings.filter(arr => arr.length);
+        return sourceStrings;
+    }
+
+    async extractTemplateStrings(baseDir: string) {
+        throw Error('Not implemented');
+    }
+
+    async extractSourceStringsFromConstantFile() {
+        let sourceStrings: ISourceString[] = [];
+        Object.keys(this.constFileData).forEach(key => {
+            const sourceString = createSourceStringObj(key, this.constFileData[key]);
+            this.parser.set(key, sourceString.defaultValue);
+            sourceStrings.push(sourceString);
+        })
+        sourceStrings = sourceStrings.flat();
+        return sourceStrings;
+    }
+
     async scan(baseDir: string) {
         try {
-            const files = await this.getAllFilePaths(baseDir);
-            
-            const allScanPromises: any[] = [];
+            const sourceStrings = [
+                ...(await this.extractMethodsStrings(baseDir)),
+                ...(await this.extractSourceStringsFromConstantFile())
+            ].flat();
 
-            // Extract all method source strings
-            files.forEach(path => {
-                 allScanPromises.push(this.parseContentAsync(path));
-            });
-            let sourceStrings = await Promise.all(allScanPromises);
-            sourceStrings = sourceStrings.filter(arr => arr.length);
+            writeJSON(sourceStrings, path.join(tempDirPath, 'sourceStrings.json'));
 
-            // Extract all source strings from constant file
-            Object.keys(this.constFileData).forEach(key => {
-                const sourceString = createSourceStringObj(key, this.constFileData[key]);
-                this.parser.set(key, sourceString.defaultValue);
-                sourceStrings.push(sourceString);
-            })
-            console.log("Resource Store ", this.parser.get())
-            return sourceStrings.flat();
+            console.log(this.keyCountMap)
+            return sourceStrings;
 
         } catch (error) {
             console.log(error)
         }
+    }
+
+    getResourceStore() {
+        return this.parser.get();
     }
 }

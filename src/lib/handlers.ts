@@ -1,8 +1,21 @@
 import { CustomHandlerFn } from "../builders/parser-options"
 
+export interface ISourceString {
+    key: string,
+    defaultValue?: string;
+    context: {
+        description?: string | null;
+        screenshotUrl?: string | null;
+        lexicalCategory?: string | null;
+    };
+    metadata?: {
+        forceCreate?: boolean;
+    };
+}''
+
 export function createSourceStringObj(key: string, obj: Record<string, any>) {
-    console.log("🚀 ~ file: handlers.ts:4 ~ createSourceStringObj ~ key:", key)
     let ss = {
+        key: key,
         defaultValue: key,
         context: {
             description: null,
@@ -14,22 +27,22 @@ export function createSourceStringObj(key: string, obj: Record<string, any>) {
         },
     };
 
-    if(!obj) {
+    if (!obj) {
         return ss;
     }
 
-    if(obj.defaultValue) {
+    if (obj.defaultValue) {
         ss.defaultValue = obj.defaultValue;
     }
-    
-    if(typeof obj.context === 'object') {
+
+    if (typeof obj.context === 'object') {
         ss.context = {
             ...ss.context,
             ...obj.context,
         }
     }
 
-    if(typeof obj.metadata === 'object') {
+    if (typeof obj.metadata === 'object') {
         ss.metadata = {
             ...ss.metadata,
             ...obj.metadata,

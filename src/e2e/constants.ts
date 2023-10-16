@@ -11,4 +11,10 @@ export default {
             forceCreate: true
         }
     },
+    'key': {
+        defaultValue: 'Content Key',
+        metadata: {
+            forceCreate: true
+        }
+    },
 }
