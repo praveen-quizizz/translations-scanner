@@ -1,5 +1,6 @@
 import fs from 'fs';
 import path from 'path';
+import pretty from '../../logger/pretty';
 
 export async function writeJSON(data: Record<string, any>, filePath: string) {
     try {
@@ -10,9 +11,9 @@ export async function writeJSON(data: Record<string, any>, filePath: string) {
             flag: 'w+'
         });
 
-        console.log('Data has been written to', filePath);
+        pretty.log('Data has been written to ' + filePath);
     } catch (error: any) {
-        console.error('Error writing JSON data:', error.message);
+        pretty.error('Error writing JSON data: ' + error.message);
     }
 }
 
@@ -29,5 +30,19 @@ export function createTempDir() {
     }
 }
 
+// return objs in array1 not present in array2 based on the key argument
+export function filterObjectsByKey<T>(
+    array1: any[],
+    array2: any[],
+    key: string
+): T[] {
+    const array2Keys = new Set(array2.map((obj) => obj[key]));
+    return array1.filter((obj) => !array2Keys.has(obj[key]));
+}
+
 
 export const tempDirPath = path.join(process.cwd(), 'tmp')
+
+export function envk(key: string, def = null) {
+    return process.env[key] || def;
+  }

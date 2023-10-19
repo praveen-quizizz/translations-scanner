@@ -8,13 +8,13 @@ export default {
     'key-3': {
         defaultValue: 'Content 888',
         metadata: {
-            forceCreate: true
+            forceCreate: false
         }
     },
     'key': {
         defaultValue: 'Content Key',
         metadata: {
-            forceCreate: true
+            forceCreate: false
         }
     },
 }
